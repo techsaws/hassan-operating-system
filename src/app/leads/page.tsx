@@ -87,7 +87,7 @@ export default async function LeadsPage({
                       "Email",
                       "Status",
                       "Service",
-                      "Qualification",
+                      "Evidence completeness",
                       "Follow-up",
                       "",
                     ].map((h) => (

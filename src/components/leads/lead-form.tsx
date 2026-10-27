@@ -106,15 +106,17 @@ export function LeadForm({ lead }: { lead?: Lead }) {
       </div>
       <section className="space-y-4 border-t border-zinc-200 pt-5">
         <div>
-          <h2 className="text-lg font-semibold">Qualification</h2>
+          <h2 className="text-lg font-semibold">Qualification evidence</h2>
           <p className="mt-1 text-sm text-zinc-500">
             Record observed facts and their sources. Claims are supplied by you,
-            not independently verified. Scores update when you save.
+            not independently verified. This score measures evidence
+            completeness, not verified buying intent or likelihood of closing.
+            Scores update when you save.
           </p>
         </div>
         <div className="rounded-md bg-zinc-50 p-4 text-sm">
           <p className="font-medium">
-            Saved score: {lead?.qualificationScore ?? 0}/100
+            Evidence completeness: {lead?.qualificationScore ?? 0}/100
           </p>
           <p className="mt-2 whitespace-pre-line text-xs text-zinc-600">
             {lead?.qualificationExplanation ??

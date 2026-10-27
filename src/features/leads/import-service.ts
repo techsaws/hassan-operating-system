@@ -72,7 +72,7 @@ export async function processImport(
     invalid: plan.invalid,
     skipped:
       plan.duplicates +
-      existing.length +
+      (plan.candidates.length - fresh.length) +
       (commit ? fresh.length - imported : 0),
     issues: issues.sort((a, b) => a.row - b.row).slice(0, 50),
     examples: fresh

@@ -1,6 +1,6 @@
 # HassanOS
 
-Private lead workspace with Neon PostgreSQL, CSV import, and deterministic qualification. Requires Node.js 20.9+. No authentication: keep the app on localhost. Both run scripts bind to `127.0.0.1`; public deployment requires authentication.
+Private lead workspace with Neon PostgreSQL, CSV import, deterministic qualification, local AI suggestions, and saved outreach drafts. Requires Node.js 20.9+. No authentication: keep the app on localhost. Both run scripts bind to `127.0.0.1`; public deployment requires authentication.
 
 ## Run (PowerShell)
 
@@ -44,3 +44,13 @@ CSV: UTF-8, comma-separated, maximum 1 MiB / 1,000 rows. Map columns and preview
 Qualification awards points only for operator-recorded evidence with source URLs: service fit 20, business need 30, contact relevance 15, reachability 15, buying signal 20. This is an evidence-completeness rubric, not independent verification or a probability of closing. Missing evidence earns zero. Scores and explanations update on save.
 
 Lists show up to 500 matching leads; overview counts include all records.
+
+## Local AI and outreach
+
+See [local AI startup/configuration](docs/local-ai.md) and [measured Vulkan results](docs/local-ai-benchmark.md). Start llama.cpp in a separate terminal before using **Analyze lead** or **Draft outreach** in a saved lead. No website is fetched, no score is changed by AI, and no message is sent. Review and edit generated content, then explicitly save or copy it. Manual drafts remain available when the model is offline or disabled.
+
+To run the real-model synthetic smoke checks after starting llama.cpp:
+
+```powershell
+node --conditions=react-server --import tsx scripts/smoke-local-ai.ts
+```

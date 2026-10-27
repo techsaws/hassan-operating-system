@@ -59,3 +59,20 @@ export const leads = pgTable(
   ],
 );
 export type Lead = typeof leads.$inferSelect;
+export const messageChannel = pgEnum("message_channel", ["email", "linkedin"]);
+export const outreachDrafts = pgTable("outreach_drafts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  leadId: uuid("lead_id")
+    .notNull()
+    .references(() => leads.id, { onDelete: "cascade" }),
+  channel: messageChannel("channel").notNull(),
+  subject: varchar("subject", { length: 200 }),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+export type OutreachDraft = typeof outreachDrafts.$inferSelect;
