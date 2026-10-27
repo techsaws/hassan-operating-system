@@ -76,3 +76,33 @@ export const outreachDrafts = pgTable("outreach_drafts", {
     .notNull(),
 });
 export type OutreachDraft = typeof outreachDrafts.$inferSelect;
+export const campaigns = pgTable('campaigns', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 200 }).notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+export const opportunities = pgTable('opportunities', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  campaignId: uuid('campaign_id').references(() => campaigns.id, { onDelete: 'set null' }),
+  leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+  companyName: varchar('company_name', { length: 200 }),
+  sourceUrl: varchar('source_url', { length: 2048 }),
+  platform: varchar('platform', { length: 200 }),
+  observedNeed: text('observed_need'),
+  operatorEvidence: text('operator_evidence'),
+  contactName: varchar('contact_name', { length: 200 }),
+  contactEmail: varchar('contact_email', { length: 254 }),
+  targetService: serviceInterest('target_service'),
+  decisionMakerEvidence: text('decision_maker_evidence'),
+  explicitRequest: integer('explicit_request').default(0).notNull(),
+  needDate: date('need_date'),
+  followUpDate: date('follow_up_date'),
+  retrievedEvidence: text('retrieved_evidence'),
+  retrievedUrl: varchar('retrieved_url', { length: 2048 }),
+  retrievedAt: timestamp('retrieved_at', { withTimezone: true }),
+  retrievalStatus: varchar('retrieval_status', { length: 30 }).default('not_retrieved').notNull(),
+  retrievalMessage: text('retrieval_message'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, t => [uniqueIndex('opportunities_source_url_unique').on(t.sourceUrl).where(sql`${t.sourceUrl} is not null`)]);
+export type Opportunity = typeof opportunities.$inferSelect;

@@ -2,6 +2,8 @@
 
 Private lead workspace with Neon PostgreSQL, CSV import, deterministic qualification, local AI suggestions, and saved outreach drafts. Requires Node.js 20.9+. No authentication: keep the app on localhost. Both run scripts bind to `127.0.0.1`; public deployment requires authentication.
 
+Opportunity intake, campaign worklists, and explicit public-page research are available under **Opportunities**. See [the practical research workflow and source limitations](docs/opportunity-research.md).
+
 ## Run (PowerShell)
 
 `DATABASE_URL` is configured in the ignored project `.env`. Next.js loads it automatically; Drizzle reads the same file. Never commit credentials.

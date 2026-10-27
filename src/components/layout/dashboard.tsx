@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, ArrowUpRight } from "lucide-react";
+import { LayoutDashboard, Users, ArrowUpRight, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 export function Dashboard({ children }: { children: React.ReactNode }) {
   const path = usePathname();
@@ -27,6 +27,7 @@ export function Dashboard({ children }: { children: React.ReactNode }) {
           {[
             { href: "/", title: "Overview", icon: LayoutDashboard },
             { href: "/leads", title: "Leads", icon: Users },
+            { href: "/opportunities", title: "Opportunities", icon: Search },
           ].map(({ href, title, icon: Icon }) => (
             <Link
               key={href}
@@ -50,7 +51,7 @@ export function Dashboard({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="mt-8 flex items-center gap-2 text-xs text-zinc-500">
           <ArrowUpRight size={14} />
-          Local workspace · Milestone 001
+          Local acquisition workspace
         </div>
       </aside>
       <main className="min-w-0 p-5 md:p-10 lg:p-12">
