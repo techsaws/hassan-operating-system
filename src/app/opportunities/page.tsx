@@ -7,6 +7,7 @@ import {
 import { assessOpportunity } from "@/features/opportunities/assessment";
 import { Button } from "@/components/ui/button";
 import { CampaignCreate } from "@/components/leads/campaign-create";
+import { FindLeads } from "@/components/leads/find-leads";
 export const dynamic = "force-dynamic";
 export default async function OpportunitiesPage({
   searchParams,
@@ -43,6 +44,7 @@ export default async function OpportunitiesPage({
           <Link href="/opportunities/new">Capture opportunity / URL</Link>
         </Button>
       </div>
+      <FindLeads campaigns={campaigns} />
       <CampaignCreate />
       <form className="mb-5 flex items-end gap-3" action="/opportunities">
         <div>
@@ -88,13 +90,23 @@ export default async function OpportunitiesPage({
                       className="font-medium text-teal-800 underline"
                       href={`/opportunities/${o.id}`}
                     >
-                      {o.companyName || "Company not yet identified"}
+                      {o.companyName ||
+                        o.discovery?.title ||
+                        "Company not yet identified"}
                     </Link>
                     <p className="mt-1 text-xs text-zinc-500">
                       {o.platform || "Source/platform unknown"} ·{" "}
                       {campaigns.find((c) => c.id === o.campaignId)?.name ||
                         "Unassigned"}
                     </p>
+                    {o.discovery && (
+                      <p className="mt-1 text-xs text-zinc-500">
+                        Discovery: {o.discovery.classification} ·{" "}
+                        {o.discovery.availability} · Published{" "}
+                        {o.discovery.publishedAt.slice(0, 10)} · Availability
+                        requires recheck
+                      </p>
+                    )}
                     {o.sourceUrl && (
                       <p className="mt-1 max-w-64 truncate text-xs text-zinc-500">
                         {o.sourceUrl}

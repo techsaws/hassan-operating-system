@@ -5,6 +5,7 @@ import type { Opportunity } from "../src/db/schema";
 import { analyzeOpportunity } from "../src/features/opportunities/analysis";
 async function main() {
   const o: Opportunity = {
+    discovery: null,
     id: crypto.randomUUID(),
     companyName: "Synthetic Opportunity Verification",
     sourceUrl: "https://example.com/test-source",

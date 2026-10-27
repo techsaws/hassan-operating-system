@@ -4,6 +4,8 @@ Private lead workspace with Neon PostgreSQL, CSV import, deterministic qualifica
 
 Opportunity intake, campaign worklists, and explicit public-page research are available under **Opportunities**. See [the practical research workflow and source limitations](docs/opportunity-research.md).
 
+Click **Find Leads** on Opportunities to search the free public HN freelance-request API without supplying prospect names. Review classification, freshness, unknowns and source links, then save selected candidates. Sparse/empty results are reported honestly; prepared manual-search links remain available. [Source assessment and live results](docs/discovery.md).
+
 ## Run (PowerShell)
 
 `DATABASE_URL` is configured in the ignored project `.env`. Next.js loads it automatically; Drizzle reads the same file. Never commit credentials.

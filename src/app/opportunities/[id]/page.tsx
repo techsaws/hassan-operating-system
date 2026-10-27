@@ -24,7 +24,11 @@ export default async function OpportunityPage({
       <div className="page-heading">
         <div>
           <p className="eyebrow">OPPORTUNITY RESEARCH</p>
-          <h1>{opportunity.companyName || "Incomplete opportunity"}</h1>
+          <h1>
+            {opportunity.companyName ||
+              opportunity.discovery?.title ||
+              "Incomplete opportunity"}
+          </h1>
           <p className="subtitle">
             {assessment.readiness} · {assessment.nextAction}
           </p>
@@ -36,6 +40,41 @@ export default async function OpportunityPage({
           </a>
         </div>
       </div>
+      {opportunity.discovery && (
+        <div className="panel mb-5 max-w-3xl space-y-2 p-4 text-sm">
+          <p>
+            <strong>Discovery source:</strong> HN via Algolia · Published{" "}
+            {opportunity.discovery.publishedAt.slice(0, 10)}
+          </p>
+          <p>
+            {opportunity.discovery.classification} ·{" "}
+            {opportunity.discovery.availability} (status at discovery; recheck
+            before outreach).
+          </p>
+          <p>
+            Company country:{" "}
+            {opportunity.discovery.countryEvidence || "Not established"} ·
+            Category:{" "}
+            {opportunity.discovery.categoryEvidence || "Not established"}
+          </p>
+          {opportunity.discovery.contactRoute && (
+            <a
+              href={opportunity.discovery.contactRoute.url}
+              className="break-all text-teal-800 underline"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              Buyer-provided route (not independently verified):{" "}
+              {opportunity.discovery.contactRoute.url}
+            </a>
+          )}
+          <p>
+            Discovery text is a source excerpt, not an operator assertion.
+            Review and record the actual need, then use Qwen analysis and the
+            existing CRM handoff. No lead was created automatically.
+          </p>
+        </div>
+      )}
       <OpportunityForm
         key={opportunity.updatedAt.toISOString()}
         opportunity={opportunity}

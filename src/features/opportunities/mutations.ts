@@ -27,6 +27,7 @@ export async function writeOpportunity(id: string | null, input: unknown) {
     .set({
       ...data,
       updatedAt: new Date(),
+      discovery: sql`case when ${opportunities.sourceUrl} is not distinct from ${data.sourceUrl} then ${opportunities.discovery} else null end`,
       retrievedEvidence: sql`case when ${opportunities.sourceUrl} is not distinct from ${data.sourceUrl} then ${opportunities.retrievedEvidence} else null end`,
       retrievedUrl: sql`case when ${opportunities.sourceUrl} is not distinct from ${data.sourceUrl} then ${opportunities.retrievedUrl} else null end`,
       retrievedAt: sql`case when ${opportunities.sourceUrl} is not distinct from ${data.sourceUrl} then ${opportunities.retrievedAt} else null end`,
