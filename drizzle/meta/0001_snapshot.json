@@ -1,0 +1,233 @@
+{
+  "id": "619884cf-436b-4444-a9a3-7eb76c6c1af9",
+  "prevId": "373b6490-bbf8-44f8-8220-5425004dbd91",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.leads": {
+      "name": "leads",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_name": {
+          "name": "company_name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "website_url": {
+          "name": "website_url",
+          "type": "varchar(2048)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_name": {
+          "name": "contact_name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_email": {
+          "name": "contact_email",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country": {
+          "name": "country",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "service_interest": {
+          "name": "service_interest",
+          "type": "service_interest",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "lead_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'new'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "next_follow_up": {
+          "name": "next_follow_up",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_service": {
+          "name": "target_service",
+          "type": "service_interest",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "problem_evidence": {
+          "name": "problem_evidence",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evidence_url": {
+          "name": "evidence_url",
+          "type": "varchar(2048)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "service_fit_evidence": {
+          "name": "service_fit_evidence",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_relevance_evidence": {
+          "name": "contact_relevance_evidence",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reachability_evidence": {
+          "name": "reachability_evidence",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "buying_signal_evidence": {
+          "name": "buying_signal_evidence",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "buying_signal_url": {
+          "name": "buying_signal_url",
+          "type": "varchar(2048)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "qualification_score": {
+          "name": "qualification_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "qualification_explanation": {
+          "name": "qualification_explanation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Not reviewed. Missing qualification evidence; no points awarded.'"
+        },
+        "last_reviewed_at": {
+          "name": "last_reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "leads_contact_email_unique": {
+          "name": "leads_contact_email_unique",
+          "columns": [
+            {
+              "expression": "lower(\"contact_email\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"leads\".\"contact_email\" is not null and \"leads\".\"contact_email\" <> ''",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "leads_score_range": {
+          "name": "leads_score_range",
+          "value": "\"leads\".\"qualification_score\" between 0 and 100"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.lead_status": {
+      "name": "lead_status",
+      "schema": "public",
+      "values": [
+        "new",
+        "researching",
+        "qualified",
+        "contacted",
+        "replied",
+        "meeting",
+        "proposal",
+        "won",
+        "lost"
+      ]
+    },
+    "public.service_interest": {
+      "name": "service_interest",
+      "schema": "public",
+      "values": [
+        "automation",
+        "software",
+        "backend",
+        "security"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

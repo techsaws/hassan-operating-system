@@ -1,32 +1,36 @@
-# HassanOS — Milestone 001
+# HassanOS
 
-Local personal lead workspace. Node.js 20.9+ and PostgreSQL 14+ required.
-No authentication is included. Keep the server on localhost; authentication is required before any public deployment. Both run scripts bind to `127.0.0.1`.
+Private lead workspace with Neon PostgreSQL, CSV import, and deterministic qualification. Requires Node.js 20.9+. No authentication: keep the app on localhost. Both run scripts bind to `127.0.0.1`; public deployment requires authentication.
 
-## Setup (PowerShell)
+## Run (PowerShell)
+
+`DATABASE_URL` is configured in the ignored project `.env`. Next.js loads it automatically; Drizzle reads the same file. Never commit credentials.
 
 ```powershell
+Set-Location 'D:\Internal Systems\hassanos'
 npm.cmd ci
-createdb -U postgres hassanos
-Copy-Item .env.example .env.local
-# Edit .env.local with your local PostgreSQL credentials.
 npm.cmd run db:migrate
 npm.cmd run dev
 ```
 
-Open http://127.0.0.1:3000. `DATABASE_URL` can also be supplied through the environment. Never commit `.env.local`.
+Open http://127.0.0.1:3000. For a production build on localhost:
 
-## Verification
+```powershell
+npm.cmd run build
+npm.cmd start
+```
+
+## Verify
 
 ```powershell
 npm.cmd run lint
 npm.cmd run typecheck
 npm.cmd test
+npm.cmd run test:db
 npm.cmd run build
-npm.cmd start
 ```
 
-With PostgreSQL running: create a lead with email `person@example.com`, refresh to confirm persistence, edit its status, search company/contact/email, and filter by status. Check overview totals against the list. Try creating another lead with `PERSON@example.com` (must fail), create multiple leads with blank emails (must succeed), and submit an empty company, malformed email, or invalid URL (must show field errors). Confirm edits can keep their original email.
+`test:db` uses the configured database, creates uniquely marked verification records, and removes them afterward. Run without simultaneous manual writes so count assertions remain stable.
 
 ## Schema changes
 
@@ -35,4 +39,8 @@ npm.cmd run db:generate
 npm.cmd run db:migrate
 ```
 
-The initial migration is in `drizzle/`. List results are limited to the latest 500 matching records; overview counts include all records. Tests cover input validation; database-backed acceptance requires the manual verification above.
+CSV: UTF-8, comma-separated, maximum 1 MiB / 1,000 rows. Map columns and preview before importing. Invalid rows and duplicate nonempty emails are skipped. Blank emails are allowed and cannot be deduplicated. Valid records import in one transaction; existing records stay unchanged. Preview shows ten valid records and up to fifty row issues.
+
+Qualification awards points only for operator-recorded evidence with source URLs: service fit 20, business need 30, contact relevance 15, reachability 15, buying signal 20. This is an evidence-completeness rubric, not independent verification or a probability of closing. Missing evidence earns zero. Scores and explanations update on save.
+
+Lists show up to 500 matching leads; overview counts include all records.

@@ -104,6 +104,116 @@ export function LeadForm({ lead }: { lead?: Lead }) {
         />
         {errors("notes")}
       </div>
+      <section className="space-y-4 border-t border-zinc-200 pt-5">
+        <div>
+          <h2 className="text-lg font-semibold">Qualification</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Record observed facts and their sources. Claims are supplied by you,
+            not independently verified. Scores update when you save.
+          </p>
+        </div>
+        <div className="rounded-md bg-zinc-50 p-4 text-sm">
+          <p className="font-medium">
+            Saved score: {lead?.qualificationScore ?? 0}/100
+          </p>
+          <p className="mt-2 whitespace-pre-line text-xs text-zinc-600">
+            {lead?.qualificationExplanation ??
+              "Not reviewed. Missing qualification evidence; no points awarded."}
+          </p>
+          <p className="mt-2 text-xs text-zinc-500">
+            Last reviewed:{" "}
+            {lead?.lastReviewedAt
+              ? new Date(lead.lastReviewedAt).toISOString().slice(0, 10)
+              : "Not reviewed"}
+          </p>
+        </div>
+        <div>
+          <label htmlFor="targetService">Target service</label>
+          <select
+            id="targetService"
+            name="targetService"
+            defaultValue={
+              state.values?.targetService ?? lead?.targetService ?? ""
+            }
+          >
+            <option value="">Unspecified</option>
+            {services.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          {errors("targetService")}
+        </div>
+        {(
+          [
+            [
+              "problemEvidence",
+              "Prospect problem / evidence",
+              "Describe the observed business need; do not infer it from the company industry.",
+            ],
+            [
+              "evidenceUrl",
+              "Evidence source URL",
+              "Source supporting the need, service fit, contact relevance, or reachability.",
+            ],
+            [
+              "serviceFitEvidence",
+              "Service fit evidence",
+              "Explain how the target service addresses the documented need.",
+            ],
+            [
+              "contactRelevanceEvidence",
+              "Contact relevance evidence",
+              "Record why this named person is relevant to the decision.",
+            ],
+            [
+              "reachabilityEvidence",
+              "Reachability evidence",
+              "Record where the email was published or how reachability was confirmed.",
+            ],
+            [
+              "buyingSignalEvidence",
+              "Buying signal evidence",
+              "Record an explicit request, invitation, or other observed buying signal.",
+            ],
+            [
+              "buyingSignalUrl",
+              "Buying signal source URL",
+              "A source for the specific buying signal.",
+            ],
+          ] as const
+        ).map(([name, label, help]) => (
+          <div key={name}>
+            <label htmlFor={name}>{label}</label>
+            <p id={`${name}-help`} className="mb-2 text-xs text-zinc-500">
+              {help}
+            </p>
+            {name.endsWith("Url") ? (
+              <input
+                id={name}
+                name={name}
+                type="url"
+                maxLength={2048}
+                defaultValue={state.values?.[name] ?? lead?.[name] ?? ""}
+                aria-invalid={!!state.errors?.[name]}
+                aria-describedby={`${name}-help ${state.errors?.[name] ? `${name}-error` : ""}`}
+              />
+            ) : (
+              <textarea
+                id={name}
+                name={name}
+                rows={2}
+                maxLength={5000}
+                defaultValue={state.values?.[name] ?? lead?.[name] ?? ""}
+                aria-invalid={!!state.errors?.[name]}
+                aria-describedby={`${name}-help ${state.errors?.[name] ? `${name}-error` : ""}`}
+              />
+            )}
+            {errors(name)}
+          </div>
+        ))}
+      </section>
       <div className="flex gap-3 border-t border-zinc-200 pt-5">
         <Button type="submit" disabled={pending}>
           {pending ? "Saving…" : lead ? "Save changes" : "Create lead"}

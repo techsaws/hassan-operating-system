@@ -1,10 +1,8 @@
 "use server";
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getDb } from "@/db";
-import { leads } from "@/db/schema";
+import { writeLead } from "./mutations";
 import { leadInput, type FormState } from "./validation";
 export async function saveLead(
   id: string | null,
@@ -27,15 +25,8 @@ export async function saveLead(
       message: "Check the highlighted fields.",
     };
   try {
-    if (id) {
-      const updated = await getDb()
-        .update(leads)
-        .set({ ...result.data, updatedAt: new Date() })
-        .where(eq(leads.id, id))
-        .returning({ id: leads.id });
-      if (!updated.length)
-        return { values, message: "This lead no longer exists." };
-    } else await getDb().insert(leads).values(result.data);
+    const saved = await writeLead(id, result.data);
+    if (!saved) return { values, message: "This lead no longer exists." };
   } catch (error) {
     const e = error as { code?: string; cause?: { code?: string } };
     if (e.code === "23505" || e.cause?.code === "23505")

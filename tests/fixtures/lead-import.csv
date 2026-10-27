@@ -1,0 +1,7 @@
+Business Name,Website,Contact Name,Email Address,Country,Lead Source,Service,Comments
+verification-ui-import-existing-20261027,https://example.com,Test Contact,VERIFICATION-UI-20261027@EXAMPLE.COM,Test country,UI verification,backend,Do not overwrite existing
+verification-ui-import-fresh-20261027,https://example.com,Test Contact,verification-ui-import-20261027@example.com,Test country,UI verification,BACKEND,"Quoted, test note"
+verification-ui-import-duplicate-20261027,,,VERIFICATION-UI-IMPORT-20261027@EXAMPLE.COM,,,,Duplicate within CSV
+verification-ui-import-invalid-20261027,,,invalid-email,,,,Must be rejected
+verification-ui-import-blank1-20261027,,,,,,,Blank email allowed
+verification-ui-import-blank2-20261027,,,,,,,Blank email allowed

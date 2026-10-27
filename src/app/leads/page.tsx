@@ -7,12 +7,13 @@ export const dynamic = "force-dynamic";
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.slice(0, 200) : "";
   const status = typeof params.status === "string" ? params.status : "";
-  const rows = await listLeads(q, status);
+  const sort = params.sort === "score" ? "score" : "newest";
+  const rows = await listLeads(q, status, sort);
   return (
     <>
       <div className="page-heading">
@@ -23,12 +24,17 @@ export default async function LeadsPage({
             Build relationships. Keep the next step in sight.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/leads/new">
-            <Plus size={16} />
-            Add lead
-          </Link>
-        </Button>
+        <div className="flex gap-3">
+          <Button asChild variant="outline">
+            <Link href="/leads/import">Import CSV</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/leads/new">
+              <Plus size={16} />
+              Add lead
+            </Link>
+          </Button>
+        </div>
       </div>
       <div className="panel overflow-hidden">
         <form
@@ -56,6 +62,13 @@ export default async function LeadsPage({
               ))}
             </select>
           </div>
+          <div>
+            <label htmlFor="sort">Sort by</label>
+            <select id="sort" name="sort" defaultValue={sort}>
+              <option value="newest">Newest first</option>
+              <option value="score">Highest score</option>
+            </select>
+          </div>
           <Button type="submit" variant="outline">
             Apply
           </Button>
@@ -74,6 +87,7 @@ export default async function LeadsPage({
                       "Email",
                       "Status",
                       "Service",
+                      "Qualification",
                       "Follow-up",
                       "",
                     ].map((h) => (
@@ -109,6 +123,18 @@ export default async function LeadsPage({
                         {lead.serviceInterest || "—"}
                       </td>
                       <td className="text-zinc-600">
+                        <span className="font-medium">
+                          {lead.qualificationScore}/100
+                        </span>
+                        <p className="mt-1 text-xs">
+                          {lead.lastReviewedAt
+                            ? lead.qualificationScore < 100
+                              ? "Missing evidence"
+                              : "Evidence recorded"
+                            : "Not reviewed · Missing evidence"}
+                        </p>
+                      </td>
+                      <td className="text-zinc-600">
                         {lead.nextFollowUp || "—"}
                       </td>
                       <td>
@@ -126,8 +152,9 @@ export default async function LeadsPage({
               </table>
             </div>
             <p className="p-4 text-xs text-zinc-500">
-              {rows.length} leads shown · Most recently updated first · Up to
-              500 results
+              {rows.length} leads shown ·{" "}
+              {sort === "score" ? "Highest score first" : "Newest first"} · Up
+              to 500 results
             </p>
           </>
         ) : (

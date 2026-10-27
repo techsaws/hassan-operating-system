@@ -8,7 +8,7 @@ const globalDb = globalThis as unknown as {
 export function getDb() {
   if (!process.env.DATABASE_URL)
     throw new Error(
-      "DATABASE_URL is missing. Configure .env.local and run npm run db:migrate.",
+      "DATABASE_URL is missing. Configure .env and run npm run db:migrate.",
     );
   const client =
     globalDb.leadSql ??

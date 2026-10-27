@@ -8,6 +8,13 @@
       "when": 1793113669566,
       "tag": "0000_bouncy_sunspot",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793114834061,
+      "tag": "0001_kind_wendell_rand",
+      "breakpoints": true
     }
   ]
 }

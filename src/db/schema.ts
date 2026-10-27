@@ -8,6 +8,8 @@ import {
   date,
   timestamp,
   uniqueIndex,
+  integer,
+  check,
 } from "drizzle-orm/pg-core";
 import { statuses, services } from "@/features/leads/constants";
 export { statuses, services } from "@/features/leads/constants";
@@ -27,6 +29,21 @@ export const leads = pgTable(
     status: leadStatus("status").default("new").notNull(),
     notes: text("notes"),
     nextFollowUp: date("next_follow_up"),
+    targetService: serviceInterest("target_service"),
+    problemEvidence: text("problem_evidence"),
+    evidenceUrl: varchar("evidence_url", { length: 2048 }),
+    serviceFitEvidence: text("service_fit_evidence"),
+    contactRelevanceEvidence: text("contact_relevance_evidence"),
+    reachabilityEvidence: text("reachability_evidence"),
+    buyingSignalEvidence: text("buying_signal_evidence"),
+    buyingSignalUrl: varchar("buying_signal_url", { length: 2048 }),
+    qualificationScore: integer("qualification_score").default(0).notNull(),
+    qualificationExplanation: text("qualification_explanation")
+      .default(
+        "Not reviewed. Missing qualification evidence; no points awarded.",
+      )
+      .notNull(),
+    lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -35,6 +52,7 @@ export const leads = pgTable(
       .notNull(),
   },
   (t) => [
+    check("leads_score_range", sql`${t.qualificationScore} between 0 and 100`),
     uniqueIndex("leads_contact_email_unique")
       .on(sql`lower(${t.contactEmail})`)
       .where(sql`${t.contactEmail} is not null and ${t.contactEmail} <> ''`),

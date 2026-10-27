@@ -10,12 +10,14 @@
     "typecheck": "next typegen && tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts && node --conditions=react-server --import tsx --test tests/database/csv.test.ts",
+    "test:db": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/database/baseline.test.ts tests/database/workflow.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "csv-parse": "^7.0.3",
     "dotenv": "^18.0.9",
     "drizzle-orm": "^0.45.4",
     "lucide-react": "^1.62.0",

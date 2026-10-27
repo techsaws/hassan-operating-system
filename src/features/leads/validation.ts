@@ -31,6 +31,27 @@ export const leadInput = z.object({
   nextFollowUp: z
     .union([z.iso.date(), z.literal("")])
     .transform((v) => v || null),
+  targetService: z
+    .union([z.enum(services), z.literal("")])
+    .default("")
+    .transform((v) => v || null),
+  problemEvidence: optionalText(5000).default(""),
+  evidenceUrl: optionalText(2048)
+    .refine(
+      (v) => !v || (/^https?:\/\//i.test(v) && URL.canParse(v)),
+      "Enter an http:// or https:// source URL.",
+    )
+    .default(""),
+  serviceFitEvidence: optionalText(5000).default(""),
+  contactRelevanceEvidence: optionalText(5000).default(""),
+  reachabilityEvidence: optionalText(5000).default(""),
+  buyingSignalEvidence: optionalText(5000).default(""),
+  buyingSignalUrl: optionalText(2048)
+    .refine(
+      (v) => !v || (/^https?:\/\//i.test(v) && URL.canParse(v)),
+      "Enter an http:// or https:// buying signal source URL.",
+    )
+    .default(""),
 });
 export type FormState = {
   values?: Record<string, string>;

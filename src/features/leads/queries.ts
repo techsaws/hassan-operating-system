@@ -2,7 +2,7 @@ import "server-only";
 import { and, count, desc, eq, ilike, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import { leads, statuses } from "@/db/schema";
-export async function listLeads(search = "", status = "") {
+export async function listLeads(search = "", status = "", sort = "newest") {
   const escaped = search.slice(0, 200).replace(/[\\%_]/g, "\\$&");
   return getDb()
     .select()
@@ -21,7 +21,15 @@ export async function listLeads(search = "", status = "") {
           : undefined,
       ),
     )
-    .orderBy(desc(leads.updatedAt))
+    .orderBy(
+      ...(sort === "score"
+        ? [
+            desc(leads.qualificationScore),
+            desc(leads.createdAt),
+            desc(leads.id),
+          ]
+        : [desc(leads.createdAt), desc(leads.id)]),
+    )
     .limit(500);
 }
 export async function getLead(id: string) {
