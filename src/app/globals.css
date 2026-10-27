@@ -1,0 +1,46 @@
+@import "tailwindcss";
+:root {
+  color-scheme: light;
+}
+body {
+  background: #f7f8fa;
+  color: #27272a;
+  font-family: Arial, Helvetica, sans-serif;
+}
+@layer components {
+  .panel {
+    @apply rounded-xl border border-zinc-200 bg-white shadow-sm;
+  }
+  .page-heading {
+    @apply mb-8 flex flex-wrap items-center justify-between gap-4;
+  }
+  .eyebrow {
+    @apply mb-2 text-[10px] font-semibold tracking-[0.18em] text-teal-800;
+  }
+  h1 {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+  .subtitle {
+    @apply mt-2 text-sm text-zinc-500;
+  }
+  label {
+    @apply mb-1.5 block text-xs font-medium text-zinc-600;
+  }
+  input,
+  select,
+  textarea {
+    @apply w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15;
+  }
+  input[aria-invalid="true"] {
+    @apply border-red-600;
+  }
+  th {
+    @apply bg-zinc-50 px-5 py-3 text-xs font-medium text-zinc-500;
+  }
+  td {
+    @apply border-t border-zinc-100 px-5 py-4;
+  }
+  tbody tr:hover {
+    @apply bg-zinc-50/60;
+  }
+}
