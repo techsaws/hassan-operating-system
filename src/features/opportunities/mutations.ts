@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getDb } from "@/db";
 import { campaigns, leads, opportunities } from "@/db/schema";
 import { opportunityInput } from "./validation";
+import { usableRoute } from "./contact-types";
 import {
   retrievePublicPage,
   ResearchError,
@@ -28,6 +29,7 @@ export async function writeOpportunity(id: string | null, input: unknown) {
       ...data,
       updatedAt: new Date(),
       discovery: sql`case when ${opportunities.sourceUrl} is not distinct from ${data.sourceUrl} then ${opportunities.discovery} else null end`,
+      contactResearch: sql`case when ${opportunities.sourceUrl} is not distinct from ${data.sourceUrl} and ${opportunities.companyName} is not distinct from ${data.companyName} then ${opportunities.contactResearch} else null end`,
       retrievedEvidence: sql`case when ${opportunities.sourceUrl} is not distinct from ${data.sourceUrl} then ${opportunities.retrievedEvidence} else null end`,
       retrievedUrl: sql`case when ${opportunities.sourceUrl} is not distinct from ${data.sourceUrl} then ${opportunities.retrievedUrl} else null end`,
       retrievedAt: sql`case when ${opportunities.sourceUrl} is not distinct from ${data.sourceUrl} then ${opportunities.retrievedAt} else null end`,
@@ -109,47 +111,74 @@ export async function linkOpportunityLead(id: string) {
     if (o.leadId) return { leadId: o.leadId, existing: true };
     if (!o.companyName)
       throw new Error("Record the company name before creating a CRM lead.");
+    const researched = o.contactResearch?.sources ?? [];
+    const contact = researched.find(
+      (s) => s.annotation.reviewed && s.annotation.name,
+    );
+    const route = researched.find((s) => usableRoute(s.annotation));
+    const workflow = researched.find(
+      (s) => s.annotation.reviewed && s.annotation.workflowQuote,
+    );
+    const problem = researched.find(
+      (s) =>
+        s.annotation.reviewed &&
+        s.annotation.problemConfirmed &&
+        s.annotation.problemQuote,
+    );
+    const contactEmail =
+      o.contactEmail ||
+      (route?.annotation.routeKind === "email" ? route.annotation.route : null);
+    const contactName = o.contactName || contact?.annotation.name || null;
     let leadId: string | undefined;
-    if (o.contactEmail)
+    if (contactEmail)
       leadId = (
         await tx
           .select({ id: leads.id })
           .from(leads)
           .where(
-            eq(sql`lower(${leads.contactEmail})`, o.contactEmail.toLowerCase()),
+            eq(sql`lower(${leads.contactEmail})`, contactEmail.toLowerCase()),
           )
           .limit(1)
       )[0]?.id;
     let existing = Boolean(leadId);
     if (!leadId) {
-      const notes = `Opportunity research\nObserved need (operator assertion): ${o.observedNeed ?? "Not recorded"}\nOperator evidence: ${o.operatorEvidence ?? "Not recorded"}\nLast retrieved excerpt (${o.retrievedAt?.toISOString() ?? "not retrieved"}; ${o.retrievedUrl ?? "no retrieved source"}): ${o.retrievedEvidence ?? "None"}\nAll claims require human review.`;
+      const notes = `Opportunity research\nObserved need (operator assertion): ${o.observedNeed ?? "Not recorded"}\nOperator evidence: ${o.operatorEvidence ?? "Not recorded"}\nLast retrieved excerpt (${o.retrievedAt?.toISOString() ?? "not retrieved"}; ${o.retrievedUrl ?? "no retrieved source"}): ${o.retrievedEvidence ?? "None"}\nContact/workflow research: ${JSON.stringify(researched.map((s) => ({ url: s.url, origin: s.origin, recordedAt: s.recordedAt, annotation: s.annotation })))}\nAll claims require human review. Workflow observations do not establish an operational problem or buying intent.`;
       const [created] = await tx
         .insert(leads)
         .values({
           companyName: o.companyName,
-          contactName: o.contactName,
-          contactEmail: o.contactEmail,
+          contactName,
+          contactEmail: contactEmail?.toLowerCase() ?? null,
           source: o.platform,
           targetService: o.targetService,
           notes,
-          problemEvidence: o.operatorEvidence || o.retrievedEvidence,
-          evidenceUrl: o.operatorEvidence ? o.sourceUrl : o.retrievedUrl,
+          problemEvidence: o.contactResearch
+            ? problem?.annotation.problemQuote || null
+            : o.operatorEvidence || o.retrievedEvidence,
+          evidenceUrl: o.contactResearch
+            ? problem?.url || workflow?.url || null
+            : o.operatorEvidence
+              ? o.sourceUrl
+              : o.retrievedUrl,
+          serviceFitEvidence:
+            !problem || problem.url === workflow?.url
+              ? workflow?.annotation.workflowQuote || null
+              : null,
+          contactRelevanceEvidence: contact?.annotation.roleQuote || null,
+          reachabilityEvidence: route?.annotation.routeQuote || null,
           nextFollowUp: o.followUpDate,
         })
         .onConflictDoNothing()
         .returning({ id: leads.id });
       leadId = created?.id;
-      if (!leadId && o.contactEmail) {
+      if (!leadId && contactEmail) {
         existing = true;
         leadId = (
           await tx
             .select({ id: leads.id })
             .from(leads)
             .where(
-              eq(
-                sql`lower(${leads.contactEmail})`,
-                o.contactEmail.toLowerCase(),
-              ),
+              eq(sql`lower(${leads.contactEmail})`, contactEmail.toLowerCase()),
             )
             .limit(1)
         )[0]?.id;

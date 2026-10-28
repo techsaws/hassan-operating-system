@@ -6,6 +6,7 @@ import { analyzeOpportunity } from "../src/features/opportunities/analysis";
 async function main() {
   const o: Opportunity = {
     discovery: null,
+    contactResearch: null,
     id: crypto.randomUUID(),
     companyName: "Synthetic Opportunity Verification",
     sourceUrl: "https://example.com/test-source",

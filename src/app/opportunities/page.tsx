@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CampaignCreate } from "@/components/leads/campaign-create";
 import { FindLeads } from "@/components/leads/find-leads";
 import { FindBusinesses } from "@/components/leads/find-businesses";
+import { contactStatus } from "@/features/opportunities/contact-types";
 export const dynamic = "force-dynamic";
 export default async function OpportunitiesPage({
   searchParams,
@@ -96,6 +97,12 @@ export default async function OpportunitiesPage({
                         o.discovery?.title ||
                         "Company not yet identified"}
                     </Link>
+                    {(o.contactResearch ||
+                      o.platform?.startsWith("Overture Places")) && (
+                      <p className="text-xs text-zinc-600">
+                        {contactStatus(o.contactResearch)}
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-zinc-500">
                       {o.platform || "Source/platform unknown"} ·{" "}
                       {campaigns.find((c) => c.id === o.campaignId)?.name ||

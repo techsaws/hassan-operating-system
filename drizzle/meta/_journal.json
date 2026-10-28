@@ -36,6 +36,13 @@
       "when": 1793140420328,
       "tag": "0004_nappy_wrecking_crew",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793149099528,
+      "tag": "0005_crazy_madame_web",
+      "breakpoints": true
     }
   ]
 }

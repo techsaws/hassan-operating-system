@@ -10,6 +10,7 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     ".local-ai/**",
+    ".local-research/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

@@ -8,6 +8,7 @@ import { assessOpportunity } from "../src/features/opportunities/assessment";
 import type { Opportunity } from "../src/db/schema";
 export const blankOpportunity: Opportunity = {
   discovery: null,
+    contactResearch: null,
   id: crypto.randomUUID(),
   companyName: null,
   sourceUrl: null,

@@ -8,6 +8,7 @@ import { assessOpportunity } from "@/features/opportunities/assessment";
 import { getAiConfiguration } from "@/features/ai/provider";
 import { OpportunityForm } from "@/components/leads/opportunity-form";
 import { OpportunityResearch } from "@/components/leads/opportunity-research";
+import { ContactResearchPanel } from "@/components/leads/contact-research";
 export default async function OpportunityPage({
   params,
 }: {
@@ -37,6 +38,12 @@ export default async function OpportunityPage({
             href="#source-research"
           >
             Jump to source research and AI analysis
+          </a>
+          <a
+            href="#contact-research-title"
+            className="ml-4 mt-3 inline-block text-sm text-teal-800 underline"
+          >
+            Research contact / workflow
           </a>
         </div>
       </div>
@@ -85,6 +92,7 @@ export default async function OpportunityPage({
         opportunity={opportunity}
         ai={{ enabled: ai.enabled, reason: ai.reason }}
       />
+      <ContactResearchPanel opportunity={opportunity} />
     </>
   );
 }

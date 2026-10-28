@@ -13,6 +13,7 @@ import {
   jsonb,
 } from "drizzle-orm/pg-core";
 import type { DiscoveryMetadata } from "@/features/discovery/types";
+import type { ContactResearch } from "@/features/opportunities/contact-types";
 import { statuses, services } from "@/features/leads/constants";
 export { statuses, services } from "@/features/leads/constants";
 export const leadStatus = pgEnum("lead_status", statuses);
@@ -99,6 +100,7 @@ export const opportunities = pgTable(
     sourceUrl: varchar("source_url", { length: 2048 }),
     platform: varchar("platform", { length: 200 }),
     discovery: jsonb("discovery").$type<DiscoveryMetadata>(),
+    contactResearch: jsonb("contact_research").$type<ContactResearch>(),
     observedNeed: text("observed_need"),
     operatorEvidence: text("operator_evidence"),
     contactName: varchar("contact_name", { length: 200 }),
