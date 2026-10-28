@@ -28,6 +28,7 @@ export function Dashboard({ children }: { children: React.ReactNode }) {
             { href: "/", title: "Overview", icon: LayoutDashboard },
             { href: "/leads", title: "Leads", icon: Users },
             { href: "/opportunities", title: "Opportunities", icon: Search },
+            { href: "/acquisition", title: "Acquisition", icon: Search },
           ].map(({ href, title, icon: Icon }) => (
             <Link
               key={href}

@@ -11,7 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "test": "tsx --test tests/*.test.ts && node --conditions=react-server --import tsx --test tests/database/csv.test.ts tests/server/*.test.ts",
-    "test:db": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/database/baseline.test.ts tests/database/workflow.test.ts tests/database/outreach.test.ts tests/database/opportunities.test.ts tests/database/discovery.test.ts tests/database/business-discovery.test.ts tests/database/contact-research.test.ts"
+    "test:db": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/database/baseline.test.ts tests/database/workflow.test.ts tests/database/outreach.test.ts tests/database/opportunities.test.ts tests/database/discovery.test.ts tests/database/business-discovery.test.ts tests/database/contact-research.test.ts tests/database/acquisition.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",

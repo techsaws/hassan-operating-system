@@ -1,5 +1,7 @@
 # HassanOS
 
+Open **Acquisition** (`/acquisition`) for unified source intelligence, discovery and selected client/job/partnership/research pipelines. Remotive remote engineering discovery needs no credentials. Overture and HN use their existing adapters; future providers are clearly unconnected. [Source conditions, normalization and live results](docs/acquisition.md). Job postings stay job applications and never become CRM clients automatically.
+
 For a saved opportunity, use **Research contact and workflow** to record permitted official-page evidence, published contacts and observed workflows separately from hypotheses. Prepare a cautious Qwen-assisted internal message; save to existing CRM drafts only after reviewing an appropriate business email route. Customer booking forms are excluded; unknown routes stay **Contact research needed**. [Usage and limitations](docs/contact-research.md).
 
 Private lead workspace with Neon PostgreSQL, CSV import, deterministic qualification, local AI suggestions, and saved outreach drafts. Requires Node.js 20.9+. No authentication: keep the app on localhost. Both run scripts bind to `127.0.0.1`; public deployment requires authentication.

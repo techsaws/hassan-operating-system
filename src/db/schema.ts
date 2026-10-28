@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm/pg-core";
 import type { DiscoveryMetadata } from "@/features/discovery/types";
 import type { ContactResearch } from "@/features/opportunities/contact-types";
+import type { UnifiedFinding, RunCounts } from "@/features/acquisition/types";
 import { statuses, services } from "@/features/leads/constants";
 export { statuses, services } from "@/features/leads/constants";
 export const leadStatus = pgEnum("lead_status", statuses);
@@ -131,3 +132,64 @@ export const opportunities = pgTable(
   ],
 );
 export type Opportunity = typeof opportunities.$inferSelect;
+// Acquisition is a selected-finding store. Existing CRM/research/drafts stay intact.
+export const acquisitionEntities = pgTable("acquisition_entities", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 300 }).notNull(),
+  kind: varchar("kind", { length: 30 }).notNull(),
+  canonicalDomain: varchar("canonical_domain", { length: 253 }).unique(),
+  identifiers: jsonb("identifiers").$type<string[]>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+export const acquisitionFindings = pgTable(
+  "acquisition_findings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    provider: varchar("provider", { length: 40 }).notNull(),
+    sourceId: varchar("source_id", { length: 300 }).notNull(),
+    sourceUrl: varchar("source_url", { length: 2048 }).notNull(),
+    entityId: uuid("entity_id").references(() => acquisitionEntities.id, {
+      onDelete: "set null",
+    }),
+    pipeline: varchar("pipeline", { length: 30 }).notNull(),
+    legacyOpportunityId: uuid("legacy_opportunity_id").references(
+      () => opportunities.id,
+      { onDelete: "set null" },
+    ),
+    data: jsonb("data").$type<UnifiedFinding>().notNull(),
+    aliases: jsonb("aliases")
+      .$type<
+        { provider: string; sourceId: string; url: string; seenAt: string }[]
+      >()
+      .notNull()
+      .default([]),
+    firstSeen: timestamp("first_seen", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    lastSeen: timestamp("last_seen", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("acquisition_provider_record_unique").on(
+      t.provider,
+      t.sourceId,
+    ),
+    uniqueIndex("acquisition_record_url_unique")
+      .on(t.sourceUrl)
+      .where(sql`${t.data}->>'urlKind' = 'record'`),
+  ],
+);
+export const acquisitionRuns = pgTable("acquisition_runs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  provider: varchar("provider", { length: 40 }).notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  success: integer("success").notNull().default(0),
+  networkAttempt: integer("network_attempt").notNull().default(0),
+  counts: jsonb("counts").$type<RunCounts>(),
+  error: text("error"),
+});

@@ -43,6 +43,20 @@
       "when": 1793149099528,
       "tag": "0005_crazy_madame_web",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793184563857,
+      "tag": "0006_nosy_rhino",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793185659369,
+      "tag": "0007_sweet_justin_hammer",
+      "breakpoints": true
     }
   ]
 }
