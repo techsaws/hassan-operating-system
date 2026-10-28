@@ -8,6 +8,7 @@ import {
 } from "@/features/acquisition/registry";
 import {
   arrangements,
+  providerIds,
   geographies,
   pipelines,
   emptyFilters,
@@ -54,6 +55,13 @@ const views = [
   ["partnerships", "Agency Partnerships"],
   ["research", "Research"],
 ] as const;
+const sourceNames = {
+  overture: "Overture",
+  hn: "HN / Algolia",
+  remotive: "Remotive",
+  agencies: "Pick an Agency",
+  remoteok: "Remote OK",
+};
 const pipelineName = {
   client: "Client acquisition",
   job: "Remote job / engineering project",
@@ -68,7 +76,7 @@ function Filters({
   onChange: (v: FindingFilter) => void;
 }) {
   const options: [keyof FindingFilter, string, readonly string[]][] = [
-    ["provider", "Source", ["overture", "hn", "remotive"]],
+    ["provider", "Source", providerIds],
     ["pipeline", "Opportunity type", pipelines],
     ["arrangement", "Work arrangement", arrangements],
     ["geography", "Remote geography", geographies],
@@ -121,9 +129,8 @@ function FindingCard({
     <article className="panel space-y-3 p-5 text-sm">
       <div>
         <p className="text-xs text-zinc-500">
-          {f.provider === "remotive" ? "Source: Remotive" : f.provider} ·{" "}
-          {pipelineName[f.pipeline]} · {f.demand.replaceAll("_", " ")} ·{" "}
-          {f.status.replaceAll("_", " ")}
+          {"Source: " + sourceNames[f.provider]} · {pipelineName[f.pipeline]} ·{" "}
+          {f.demand.replaceAll("_", " ")} · {f.status.replaceAll("_", " ")}
         </p>
         <h3 className="mt-1 text-base font-semibold">{f.title}</h3>
         <p>{f.identity?.name || "Identity not established"}</p>
@@ -179,6 +186,23 @@ function FindingCard({
           )}
         </div>
       )}
+      {f.agency && (
+        <div className="rounded border p-3 space-y-1">
+          <p>
+            Agency location (directory): {f.agency.city || "unknown"},{" "}
+            {f.agency.country || "unknown"}.
+          </p>
+          <p>Published services: {f.agency.services.join(", ")}.</p>
+          <p>
+            Team size (directory assertion): {f.agency.teamSize || "unknown"};
+            leadership, appropriate partnership route and partnership demand:
+            not established.
+          </p>
+          {f.agency.qualityFlags.map((flag) => (
+            <p key={flag}>{flag}</p>
+          ))}
+        </div>
+      )}
       <p>
         <strong>Missing:</strong> {f.unknowns.join("; ")}
       </p>
@@ -207,7 +231,11 @@ function FindingCard({
             ? "Original catalogue index (not a company page)"
             : f.provider === "remotive"
               ? "Original Remotive listing"
-              : "Original source"}
+              : f.provider === "remoteok"
+                ? "Original Remote OK listing"
+                : f.provider === "agencies"
+                  ? "Original Pick an Agency profile"
+                  : "Original source"}
         </a>
         {f.route && f.route.url !== f.url && (
           <a
@@ -245,14 +273,10 @@ export function AcquisitionWorkspace({
 }) {
   const active = views.some(([key]) => key === view) ? view : "discover";
   const [query, setQuery] = useState<AcquisitionQuery>({
-    provider: "remotive",
+    provider: "agencies",
     area: "raleigh",
     trade: "all",
-    campaignId:
-      campaigns.find((c) => c.name === "US Small Business — AI Automation")
-        ?.id ||
-      campaigns[0]?.id ||
-      "",
+    campaignId: "",
     targetService: "automation",
     keywords: "",
   });
@@ -375,8 +399,12 @@ export function AcquisitionWorkspace({
                     {success.counts.relevant} relevant/contextual findings;{" "}
                     {success.counts.organizations} identifiable organizations;{" "}
                     {success.counts.routes} published routes (purpose still
-                    needs review); {success.counts.worthReviewing} worth
-                    reviewing.
+                    needs review);{" "}
+                    {success.counts.explicitDemand ?? "not recorded"} explicit
+                    demand; {success.counts.pakistanConfirmed} Pakistan
+                    confirmed; {success.counts.eligibilityUnknown} eligibility
+                    unknown; {success.counts.duplicates} duplicates;{" "}
+                    {success.counts.worthReviewing} worth reviewing.
                   </p>
                 ) : (
                   <p>
@@ -440,6 +468,12 @@ export function AcquisitionWorkspace({
                       })
                     }
                   >
+                    <option value="agencies">
+                      Pick an Agency — agency partnerships
+                    </option>
+                    <option value="remoteok">
+                      Remote OK — complementary remote work
+                    </option>
                     <option value="remotive">
                       Remotive — remote engineering work
                     </option>
@@ -460,7 +494,11 @@ export function AcquisitionWorkspace({
                       setQuery({ ...query, campaignId: e.target.value })
                     }
                   >
-                    <option value="">No legacy research handoff</option>
+                    <option value="">
+                      {query.provider === "agencies"
+                        ? "Default agency partnership campaign"
+                        : "No legacy research handoff"}
+                    </option>
                     {campaigns.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -551,7 +589,9 @@ export function AcquisitionWorkspace({
               <p className="text-xs text-zinc-500">
                 Explicit runs only. Overture may take two minutes. Remotive
                 cache: six hours; max four network attempts/day; feed delayed 24
-                hours. No names required. Nothing is saved until selected.
+                hours. Agency data uses the default Agency Partnerships campaign
+                unless another is selected. No names required. Nothing is saved
+                until selected.
               </p>
             </form>
           )}
@@ -581,7 +621,8 @@ export function AcquisitionWorkspace({
                 {report.counts.pakistanConfirmed} · eligibility unknown{" "}
                 {report.counts.eligibilityUnknown} · duplicates excluded{" "}
                 {report.counts.duplicates} · worth reviewing{" "}
-                {report.counts.worthReviewing}.{" "}
+                {report.counts.worthReviewing} · explicit demand{" "}
+                {report.counts.explicitDemand ?? "not recorded"}.{" "}
                 {report.cached
                   ? "Cached source snapshot."
                   : "Source retrieved this run."}
@@ -642,11 +683,11 @@ export function AcquisitionWorkspace({
                       aria-label={`Save pipeline for ${f.title}`}
                       className="max-w-xs"
                       value={
-                        f.provider === "remotive"
+                        f.pipeline === "job"
                           ? "job"
                           : selection[key] || f.pipeline
                       }
-                      disabled={pending || f.provider === "remotive"}
+                      disabled={pending || f.pipeline === "job"}
                       onChange={(e) =>
                         setSelection({
                           ...selection,
@@ -654,7 +695,7 @@ export function AcquisitionWorkspace({
                         })
                       }
                     >
-                      {(f.provider === "remotive"
+                      {(f.pipeline === "job"
                         ? (["job"] as const)
                         : (["client", "partnership", "research"] as const)
                       ).map((p) => (

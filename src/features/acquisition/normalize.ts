@@ -89,8 +89,14 @@ export function eligibility(
     )
     .join("\n")
     .slice(0, 1800);
+  const conflictingResidence = [
+    ...restrictions.matchAll(
+      /\bmust (?:be based|live|reside) in\s+([^\.\n]+)/gi,
+    ),
+  ].some((m) => !/Pakistan/i.test(m[1]));
   const contradictory =
-    /locations?:\s*(?:the )?(?:US|UK|United States|United Kingdom|Canada|Singapore)|(?:must (?:be based|live|reside) in|US.only|EU.only|only (?:US|EU))\b/i.test(
+    conflictingResidence ||
+    /locations?:\s*(?:the )?(?:US|UK|United States|United Kingdom|Canada|Singapore)|(?:US.only|EU.only|only (?:US|EU))\b/i.test(
       restrictions,
     );
   let geography: Geography = /Pakistan/i.test(raw)
@@ -157,6 +163,10 @@ export function workArrangements(raw: string, text: string) {
     ["full_time", /\bfull[- ]time\b/i],
     ["part_time", /\bpart[- ]time\b/i],
     ["fixed_term", /\bfixed[- ]term\b/i],
+    [
+      "contract_unspecified",
+      /\b(?:permanent or contract|contract (?:role|position)|contractor role|full[- ]time contractors)\b/i,
+    ],
     ["independent_contractor", /\bindependent contractor\b/i],
     ["freelance", /\bfreelance (?:role|project|developer|engineer)\b/i],
     ["project", /\bproject[- ]based\b|per task/i],
@@ -192,21 +202,22 @@ export const remotiveJob = z.object({
 export const remotiveResponse = z.object({
   jobs: z.array(remotiveJob).max(2000),
 });
-export function normalizeRemotive(
+export function normalizeRemoteJob(
   j: z.infer<typeof remotiveJob>,
   seenAt: string,
+  provider: "remotive" | "remoteok" = "remotive",
 ): UnifiedFinding {
   const text = plainText(j.description);
   const skills = matchedSkills([j.title, ...j.tags, text].join(" "));
   const engineering =
-    /software|develop(?:er|ment)|(?:back|front)[- ]end|full[- ]stack|(?:head|lead|AI|cloud|security|platform|data|DevOps|service desk).*engineer|engineer.*(?:AI|software|cloud|security)/i.test(
+    /\b(?:software|developer|backend|frontend|(?:back|front)[- ]end|full[- ]?stack|(?:head|lead|AI|cloud|security|platform|data|DevOps|service desk).*engineer|engineer.*(?:AI|software|cloud|security))\b/i.test(
       j.title,
     ) ||
     /(?:build|develop|implement|maintain)\b[^.\n]{0,70}\b(?:software|APIs|applications|backend|web app)/i.test(
       text,
     );
   const admin =
-    /office assistant|\b(?:copywriter|content writer|freelance writer|sales contractor|account executive|video annotation)\b/i.test(
+    /office assistant|\b(?:copywriter|content writer|freelance writer|sales contractor|account executive|video annotation|sales development representative|business development director|business development manager|recruiter|customer success manager)\b/i.test(
       j.title,
     );
   const relevant = engineering && skills.length > 0 && !admin;
@@ -238,7 +249,10 @@ export function normalizeRemotive(
           : "current_unconfirmed";
   const geo = eligibility(j.candidate_required_location, text);
   const url = canonicalUrl(j.url);
-  if (new URL(url).hostname !== "remotive.com")
+  if (
+    new URL(url).hostname !==
+    (provider === "remotive" ? "remotive.com" : "remoteok.com")
+  )
     throw new Error("Remotive supplied an unexpected source origin.");
   const restrictions =
     text
@@ -275,7 +289,7 @@ export function normalizeRemotive(
     "Applicant count / competition not provided",
   ].filter((s): s is string => !!s);
   return {
-    provider: "remotive",
+    provider,
     sourceId: String(j.id),
     url,
     urlKind: "record",
@@ -293,10 +307,12 @@ export function normalizeRemotive(
     excerpt: text.slice(0, 6000),
     evidence: {
       origin: "public_api",
-      sourceUrl: "https://remotive.com/api/remote-jobs?category=software-dev",
+      sourceUrl:
+        provider === "remotive"
+          ? "https://remotive.com/api/remote-jobs?category=software-dev"
+          : "https://remoteok.com/api",
       retrievedAt: seenAt,
-      notes:
-        "Remotive public API; 24-hour delayed feed. Source employer identity, salary and vacancy claims are not independently verified. No employer domain inferred from its name.",
+      notes: `${provider === "remotive" ? "Remotive public API; 24-hour delayed feed." : "Remote OK public API; source text may contain encoding errors."} Source employer identity, salary and vacancy claims are not independently verified. No employer domain inferred from its name.`,
     },
     pipeline: "job",
     demand: relevant ? "explicit_demand" : "irrelevant",
@@ -311,8 +327,7 @@ export function normalizeRemotive(
     route: {
       url,
       purpose: "application",
-      verification:
-        "Public Remotive application listing; no application submitted. Employer destination must be checked manually.",
+      verification: `Public ${provider === "remotive" ? "Remotive" : "Remote OK"} application listing; no application submitted. Employer destination must be checked manually.`,
     },
     compensation: salary,
     currency,
@@ -368,5 +383,13 @@ export function countsFor(
     ).length,
     duplicates,
     worthReviewing: findings.filter((f) => f.worthReviewing).length,
+    explicitDemand: findings.filter((f) => f.demand === "explicit_demand")
+      .length,
   };
+}
+export function normalizeRemotive(
+  j: z.infer<typeof remotiveJob>,
+  seenAt: string,
+) {
+  return normalizeRemoteJob(j, seenAt, "remotive");
 }

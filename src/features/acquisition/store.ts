@@ -4,12 +4,13 @@ import { getDb } from "@/db";
 import { acquisitionEntities, acquisitionFindings } from "@/db/schema";
 import type { UnifiedFinding, Pipeline } from "./types";
 import { canonicalUrl } from "./normalize";
+import { openingKey } from "./job-identity";
 export async function persistFinding(
   f: UnifiedFinding,
   pipeline: Pipeline,
   legacyOpportunityId: string | null = null,
 ) {
-  if (f.provider === "remotive" && pipeline !== "job")
+  if (f.pipeline === "job" && pipeline !== "job")
     throw new Error(
       "Job postings must stay in the remote-job pipeline, never client sales.",
     );
@@ -22,12 +23,14 @@ export async function persistFinding(
   const url = canonicalUrl(f.url);
   const db = getDb();
   return db.transaction(async (tx) => {
+    const opening = openingKey(f);
     for (const key of [
       `finding:${f.provider}:${f.sourceId}`,
       `url:${url}`,
+      ...(opening ? ["opening:" + opening] : []),
     ].sort())
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${key}))`);
-    const [existing] = await tx
+    let [existing] = await tx
       .select()
       .from(acquisitionFindings)
       .where(
@@ -46,6 +49,14 @@ export async function persistFinding(
         ),
       )
       .limit(1);
+    if (!existing && opening) {
+      const jobs = await tx
+        .select()
+        .from(acquisitionFindings)
+        .where(eq(acquisitionFindings.pipeline, "job"))
+        .limit(500);
+      existing = jobs.find((j) => openingKey(j.data) === opening)!;
+    }
     if (existing) {
       const aliases = existing.aliases.some(
         (a) => a.provider === f.provider && a.sourceId === f.sourceId,

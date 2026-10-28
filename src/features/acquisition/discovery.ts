@@ -11,6 +11,12 @@ import {
 } from "./adapters";
 import { remotiveDiscovery } from "./remotive";
 import { countsFor } from "./normalize";
+import { normalizeRemotive } from "./normalize";
+import { agencyDiscovery } from "./agencies";
+import { remoteOkDiscovery } from "./remoteok";
+import { uniqueJobFindings } from "./job-identity";
+import { savedFindings } from "./store";
+import { readFile } from "node:fs/promises";
 const state = globalThis as typeof globalThis & {
   unifiedDiscovery?: Map<
     string,
@@ -32,6 +38,8 @@ export async function discoverAcquisition(raw: unknown) {
   let cached = false;
   let findings;
   let note = "";
+  let sourceDuplicates = 0;
+  let retrievedCount: number | undefined;
   try {
     if (q.provider === "overture") {
       const r = await discoverBusinesses({ area: q.area, trade: q.trade });
@@ -54,6 +62,39 @@ export async function discoverAcquisition(raw: unknown) {
       legacy = { hnInput: input };
       checkedAt = r.checkedAt;
       note = r.explanation;
+    } else if (q.provider === "agencies") {
+      const r = await agencyDiscovery();
+      findings = r.findings;
+      checkedAt = r.checkedAt;
+      cached = r.cached;
+      note =
+        "Data from Pick an Agency (CC BY 4.0). Up to ten US web-development agencies. Services and size are directory assertions, not subcontracting demand. No automatic company-site crawling.";
+    } else if (q.provider === "remoteok") {
+      const r = await remoteOkDiscovery();
+      checkedAt = r.checkedAt;
+      cached = r.cached;
+      retrievedCount = r.findings.length;
+      const known = (await savedFindings())
+        .filter((f) => f.pipeline === "job" && f.provider !== "remoteok")
+        .map((f) => f.data);
+      let compared = false;
+      try {
+        const c = JSON.parse(
+          await readFile(".local-research/remotive-feed-cache.json", "utf8"),
+        );
+        if (
+          Date.now() - Date.parse(c.checkedAt) < 6 * 3600000 &&
+          Date.now() >= Date.parse(c.checkedAt)
+        ) {
+          for (const j of c.data.jobs)
+            known.push(normalizeRemotive(j, c.checkedAt));
+          compared = true;
+        }
+      } catch {}
+      const unique = uniqueJobFindings(r.findings, known);
+      findings = unique.findings;
+      sourceDuplicates = unique.duplicates;
+      note = `Remote OK public API; attribution/link-back retained, no logo. Unknown location and digital-nomad tags do not establish eligibility. Cross-source duplicates require identical published application target, employer text and title. ${compared ? "Compared with recent cached Remotive feed and selected jobs." : "Recent Remotive cache unavailable; compared with selected jobs only. Potential duplicates without shared application evidence remain unresolved."}`;
     } else {
       const r = await remotiveDiscovery();
       findings = r.findings;
@@ -63,7 +104,7 @@ export async function discoverAcquisition(raw: unknown) {
         "Remotive free API, delayed 24 hours. Small/noisy subset; worldwide advertising is not confirmed Pakistan eligibility. Application listing, not sales outreach. Cache reused for six hours.";
     }
     const seen = new Set<string>();
-    let duplicates = 0;
+    let duplicates = sourceDuplicates;
     findings = findings.filter((f) => {
       const key = `${f.provider}:${f.sourceId}`;
       if (seen.has(key)) {
@@ -75,7 +116,7 @@ export async function discoverAcquisition(raw: unknown) {
     });
     const counts = countsFor(
       findings,
-      findings.length + duplicates,
+      retrievedCount ?? findings.length + duplicates,
       duplicates,
     );
     if (q.provider !== "remotive" || cached)
@@ -97,7 +138,7 @@ export async function discoverAcquisition(raw: unknown) {
     for (const [key, v] of reports)
       if (
         Date.now() - Date.parse(v.report.checkedAt) > 600000 &&
-        v.report.provider !== "remotive"
+        !["remotive", "remoteok", "agencies"].includes(v.report.provider)
       )
         reports.delete(key);
     while (reports.size >= 3) reports.delete(reports.keys().next().value!);
@@ -127,7 +168,9 @@ export function selectedFinding(
     !entry ||
     !finding ||
     Date.now() - Date.parse(entry.report.checkedAt) >
-      (provider === "remotive" ? 6 * 3600000 : 600000)
+      (["remotive", "remoteok", "agencies"].includes(provider)
+        ? 6 * 3600000
+        : 600000)
   )
     throw new Error("Run discovery again; the source snapshot expired.");
   return { finding, legacy: entry.legacy };

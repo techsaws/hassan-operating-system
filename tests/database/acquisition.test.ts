@@ -10,15 +10,21 @@ import {
   leads,
   opportunities,
   outreachDrafts,
+  campaigns,
 } from "../../src/db/schema";
 import { persistFinding } from "../../src/features/acquisition/store";
 import { normalizeRemotive } from "../../src/features/acquisition/normalize";
 import { syntheticJob } from "../fixtures/acquisition";
+import { normalizeAgency } from "../../src/features/acquisition/agencies";
+import { saveAgencyResearch } from "../../src/features/acquisition/agency-handoff";
+import { createCampaign } from "../../src/features/opportunities/mutations";
 test("Neon selected findings deduplicate identities without merging openings/pipelines or changing CRM/research/drafts", async () => {
   const db = getDb(),
     marker = crypto.randomUUID(),
     ids: string[] = [],
     entityIds = new Set<string>();
+  const legacyIds: string[] = [];
+  let campaignId: string | undefined;
   const stats = async () =>
     Promise.all([
       db.select({ n: count() }).from(leads),
@@ -204,8 +210,70 @@ test("Neon selected findings deduplicate identities without merging openings/pip
       ).id,
       noSite.id,
     );
+    const applicationTarget = `https://${marker}.example.com/careers/opening-1`;
+    const boardJob = {
+      ...a,
+      sourceId: a.sourceId + "shared-opening",
+      url: a.url + "-shared-opening",
+      applicationTarget,
+      excerpt: a.excerpt + "\nApply at " + applicationTarget,
+    };
+    const board = await persistFinding(boardJob, "job");
+    ids.push(board.id);
+    const cross = await persistFinding(
+      {
+        ...boardJob,
+        provider: "remoteok",
+        sourceId: "799" + a.sourceId,
+        url: "https://remoteok.com/remote-jobs/synthetic-" + marker,
+      },
+      "job",
+    );
+    assert.equal(cross.id, board.id);
+    assert.equal(cross.existing, true);
+    await assert.rejects(
+      persistFinding({ ...boardJob, provider: "remoteok" }, "partnership"),
+      /Job postings/,
+    );
+    campaignId = (await createCampaign("Synthetic agency " + marker)).id;
+    const agency = normalizeAgency(
+      {
+        slug: "synthetic-" + marker,
+        name: "Synthetic Agency " + marker,
+        tagline: "Web development",
+        location: { country: "United States", city: "Synthetic City" },
+        services: ["Web Development"],
+        team_size: "11-50",
+        website: `https://${marker}-agency.example.com`,
+        profile_url:
+          "https://www.pickanagency.com/agencies/synthetic-" + marker,
+      },
+      new Date().toISOString(),
+    );
+    const legacy = await saveAgencyResearch(agency, campaignId);
+    legacyIds.push(legacy);
+    await db
+      .update(opportunities)
+      .set({ operatorEvidence: "Existing manual agency research" })
+      .where(eq(opportunities.id, legacy));
+    assert.equal(await saveAgencyResearch(agency, campaignId), legacy);
+    const [research] = await db
+      .select()
+      .from(opportunities)
+      .where(eq(opportunities.id, legacy));
+    assert.equal(research.operatorEvidence, "Existing manual agency research");
+    assert.equal(research.leadId, null);
+    assert.equal(research.observedNeed, null);
+    assert.equal(research.explicitRequest, 0);
+    await db.delete(opportunities).where(eq(opportunities.id, legacy));
     assert.deepEqual(await stats(), before);
   } finally {
+    if (legacyIds.length)
+      await db
+        .delete(opportunities)
+        .where(inArray(opportunities.id, legacyIds));
+    if (campaignId)
+      await db.delete(campaigns).where(eq(campaigns.id, campaignId));
     if (ids.length)
       await db
         .delete(acquisitionFindings)

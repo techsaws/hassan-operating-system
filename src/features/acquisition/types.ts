@@ -29,7 +29,14 @@ export const geographies = [
   "other_restricted",
   "unknown",
 ] as const;
-export type ProviderId = "overture" | "hn" | "remotive";
+export const providerIds = [
+  "overture",
+  "hn",
+  "remotive",
+  "agencies",
+  "remoteok",
+] as const;
+export type ProviderId = (typeof providerIds)[number];
 export type Pipeline = (typeof pipelines)[number];
 export type Arrangement = (typeof arrangements)[number];
 export type Geography = (typeof geographies)[number];
@@ -84,6 +91,18 @@ export type UnifiedFinding = {
   nextAction: string;
   worthReviewing: boolean;
   saveable: boolean;
+  applicationTarget?: string | null;
+  agency?: {
+    website: string | null;
+    country: string | null;
+    city: string | null;
+    services: string[];
+    teamSize: string | null;
+    leadership: null;
+    partnershipRoute: null;
+    partnershipDemand: null;
+    qualityFlags: string[];
+  };
 };
 export type RunCounts = {
   retrieved: number;
@@ -94,6 +113,7 @@ export type RunCounts = {
   eligibilityUnknown: number;
   duplicates: number;
   worthReviewing: number;
+  explicitDemand?: number;
 };
 export type UnifiedReport = {
   token: string;
@@ -105,7 +125,7 @@ export type UnifiedReport = {
   note: string;
 };
 export const acquisitionQuery = z.object({
-  provider: z.enum(["overture", "hn", "remotive"]),
+  provider: z.enum(providerIds),
   area: z.enum(["raleigh", "austin", "tampa"]).default("raleigh"),
   trade: z.enum(["all", "hvac", "plumbing", "electrical"]).default("all"),
   campaignId: z.union([z.uuid(), z.literal("")]).default(""),

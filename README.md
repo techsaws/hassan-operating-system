@@ -65,6 +65,8 @@ node --conditions=react-server --import tsx scripts/smoke-local-ai.ts
 
 ## Business prospect research (Milestone 006)
 
+For the unified agency and remote-job discovery workflow, see [Milestone 009 acquisition expansion](docs/acquisition-expansion.md). Start at `/acquisition`; no company names are required.
+
 Optional setup for **Find Businesses** (Python 3.10+; no credentials or billing):
 
 ```powershell

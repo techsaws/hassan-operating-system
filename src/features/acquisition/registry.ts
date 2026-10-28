@@ -11,6 +11,32 @@ export const sourceCategories = [
 ] as const;
 export const sourceRegistry = [
   {
+    id: "agencies",
+    name: "Pick an Agency",
+    category: "Business directories",
+    method: "Documented agency search JSON API",
+    status: "available",
+    credentials: "None",
+    setup:
+      "Ready. Bounded US Web Development cohort, no company names required.",
+    terms: "https://www.pickanagency.com/developers",
+    usage:
+      "CC BY 4.0; credit Pick an Agency and link back. Cache six hours; app caps at four network attempts/day and one-minute retries, well below the documented few-requests/second ceiling. No source dataset in public Git. Directory assertions can be wrong; listings/services are not partnership demand.",
+  },
+  {
+    id: "remoteok",
+    name: "Remote OK",
+    category: "Remote jobs",
+    method: "Public JSON jobs API with embedded API terms",
+    status: "available",
+    credentials: "None",
+    setup:
+      "Ready. Latest bounded feed, local engineering/geography checks and strict cross-source duplicate evidence.",
+    terms: "https://remoteok.com/api",
+    usage:
+      "Mention Remote OK and retain a follow link to its listing (no nofollow). No Remote OK logo. No fixed provider quota established; app caches six hours, max four network attempts/day and minimum one-minute retry. Selected snapshots stay private; verify vacancy/location and employer application path manually.",
+  },
+  {
     id: "overture",
     name: "Overture Places",
     category: "Business directories",

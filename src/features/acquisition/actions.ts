@@ -2,10 +2,11 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { discoverAcquisition, selectedFinding } from "./discovery";
-import { pipelines } from "./types";
+import { pipelines, providerIds } from "./types";
 import { persistFinding } from "./store";
 import { saveBusiness } from "@/features/discovery/business-save";
 import { saveDiscoveredOpportunity } from "@/features/discovery/save";
+import { saveAgencyResearch } from "./agency-handoff";
 export async function acquisitionDiscoveryAction(raw: unknown) {
   try {
     return { report: await discoverAcquisition(raw) };
@@ -27,7 +28,7 @@ export async function saveAcquisitionAction(
 ) {
   try {
     z.uuid().parse(token);
-    const p = z.enum(["overture", "hn", "remotive"]).parse(provider);
+    const p = z.enum(providerIds).parse(provider);
     const pipe = z.enum(pipelines).parse(pipeline);
     z.union([z.uuid(), z.literal("")]).parse(campaignId);
     const { finding, legacy } = selectedFinding(token, p, sourceId);
@@ -35,12 +36,14 @@ export async function saveAcquisitionAction(
       throw new Error(
         "Business/research records cannot be reclassified as a job without hiring evidence.",
       );
-    if (p === "remotive" && pipe !== "job")
+    if (finding.pipeline === "job" && pipe !== "job")
       throw new Error(
         "Job postings must stay in the remote-job pipeline, never client sales.",
       );
     let legacyId: string | null = null;
-    if (p !== "remotive" && campaignId && finding.saveable) {
+    if (p === "agencies" && finding.saveable)
+      legacyId = await saveAgencyResearch(finding, campaignId);
+    if (finding.pipeline !== "job" && campaignId && finding.saveable) {
       if (p === "overture" && legacy.businessToken)
         legacyId = (
           await saveBusiness(legacy.businessToken, sourceId, campaignId)
