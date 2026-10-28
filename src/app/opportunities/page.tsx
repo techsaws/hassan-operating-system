@@ -8,6 +8,7 @@ import { assessOpportunity } from "@/features/opportunities/assessment";
 import { Button } from "@/components/ui/button";
 import { CampaignCreate } from "@/components/leads/campaign-create";
 import { FindLeads } from "@/components/leads/find-leads";
+import { FindBusinesses } from "@/components/leads/find-businesses";
 export const dynamic = "force-dynamic";
 export default async function OpportunitiesPage({
   searchParams,
@@ -45,6 +46,7 @@ export default async function OpportunitiesPage({
         </Button>
       </div>
       <FindLeads campaigns={campaigns} />
+      <FindBusinesses campaigns={campaigns} />
       <CampaignCreate />
       <form className="mb-5 flex items-end gap-3" action="/opportunities">
         <div>

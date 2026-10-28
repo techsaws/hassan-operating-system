@@ -1,0 +1,2 @@
+# Official free Overture reader; runtime files belong in ignored .local-research.
+overturemaps==1.0.2

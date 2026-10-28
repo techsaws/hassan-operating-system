@@ -58,3 +58,17 @@ To run the real-model synthetic smoke checks after starting llama.cpp:
 ```powershell
 node --conditions=react-server --import tsx scripts/smoke-local-ai.ts
 ```
+
+## Business prospect research (Milestone 006)
+
+Optional setup for **Find Businesses** (Python 3.10+; no credentials or billing):
+
+```powershell
+Set-Location 'D:\Internal Systems\hassanos'
+python -m pip install --target .local-research/python -r scripts/requirements-business.txt
+npm.cmd run dev
+```
+
+Open `/opportunities` → **Find Businesses** → select a campaign, area and trade → **Discover businesses**. Review source-listed websites/phones and missing facts → **Save for review** → **Open saved research**. Verify the actual need and contact ownership before using existing Qwen analysis, CRM handoff and outreach drafting. Nothing is sent automatically. No company names are needed to start. Only Raleigh/Apex, Austin and Tampa bounding boxes are supported initially; small-business size is not asserted.
+
+See [source feasibility and coverage results](docs/business-prospecting.md). Local Python packages and research data must stay in ignored `.local-research/`; never commit prospect datasets. Normal HN discovery does not require Python.

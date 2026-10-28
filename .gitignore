@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 /.local-ai/
+/.local-research/
 *.gguf
 /.pnp
 .pnp.*
